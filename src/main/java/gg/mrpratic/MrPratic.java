@@ -143,15 +143,15 @@ public final class MrPratic extends JavaPlugin implements Listener, CommandExecu
         p.setHealth(20); p.setFoodLevel(20); p.setFireTicks(0);
         for(PotionEffect effect:p.getActivePotionEffects()) p.removePotionEffect(effect.getType());
         switch(mode) {
-            case CPVP -> { armor(p,Material.NETHERITE); p.getInventory().addItem(item(Material.NETHERITE_SWORD),item(Material.END_CRYSTAL,64),item(Material.OBSIDIAN,64),item(Material.END_CRYSTAL,64),item(Material.TOTEM_OF_UNDYING,2),item(Material.GOLDEN_APPLE,16),item(Material.EXPERIENCE_BOTTLE,32)); p.getInventory().setItemInOffHand(new ItemStack(Material.TOTEM_OF_UNDYING)); }
-            case MACE -> { armor(p,Material.NETHERITE); p.getInventory().addItem(item(Material.MACE),item(Material.WIND_CHARGE,32),item(Material.ENDER_PEARL,16)); }
-            case MIZRAK -> { armor(p,Material.IRON); p.getInventory().addItem(item(Material.TRIDENT),item(Material.SHIELD),item(Material.COOKED_BEEF,16)); }
+            case CPVP -> { armor(p,Material.NETHERITE_INGOT); p.getInventory().addItem(item(Material.NETHERITE_SWORD),item(Material.END_CRYSTAL,64),item(Material.OBSIDIAN,64),item(Material.END_CRYSTAL,64),item(Material.TOTEM_OF_UNDYING,2),item(Material.GOLDEN_APPLE,16),item(Material.EXPERIENCE_BOTTLE,32)); p.getInventory().setItemInOffHand(new ItemStack(Material.TOTEM_OF_UNDYING)); }
+            case MACE -> { armor(p,Material.NETHERITE_INGOT); p.getInventory().addItem(item(Material.MACE),item(Material.WIND_CHARGE,32),item(Material.ENDER_PEARL,16)); }
+            case MIZRAK -> { armor(p,Material.IRON_INGOT); p.getInventory().addItem(item(Material.TRIDENT),item(Material.SHIELD),item(Material.COOKED_BEEF,16)); }
             case KILIC, BALTA -> { armor(p,Material.DIAMOND); p.getInventory().addItem(item(mode==Mode.KILIC?Material.DIAMOND_SWORD:Material.DIAMOND_AXE),item(Material.GOLDEN_APPLE,8),item(Material.COBWEB,8)); }
-            case COMBO, BOXING -> { armor(p,Material.IRON); p.getInventory().addItem(item(mode==Mode.BOXING?Material.STICK:Material.DIAMOND_SWORD)); }
+            case COMBO, BOXING -> { armor(p,Material.IRON_INGOT); p.getInventory().addItem(item(mode==Mode.BOXING?Material.STICK:Material.DIAMOND_SWORD)); }
             case SUMO -> { p.getInventory().addItem(item(Material.STICK)); }
-            case BUILDUHC -> { armor(p,Material.IRON); p.getInventory().addItem(item(Material.DIAMOND_SWORD),item(Material.GOLDEN_APPLE, goldenCount()),item(Material.WATER_BUCKET),item(Material.LAVA_BUCKET),item(Material.OAK_PLANKS,64),item(Material.COBBLESTONE,64),item(Material.BOW),item(Material.ARROW,32)); }
+            case BUILDUHC -> { armor(p,Material.IRON_INGOT); p.getInventory().addItem(item(Material.DIAMOND_SWORD),item(Material.GOLDEN_APPLE, goldenCount()),item(Material.WATER_BUCKET),item(Material.LAVA_BUCKET),item(Material.OAK_PLANKS,64),item(Material.COBBLESTONE,64),item(Material.BOW),item(Material.ARROW,32)); }
             case NODEBUFF -> { armor(p,Material.DIAMOND); p.getInventory().addItem(item(Material.DIAMOND_SWORD),item(Material.ENDER_PEARL,16),item(Material.SPLASH_POTION,16),item(Material.GOLDEN_CARROT,16)); }
-            case BEDWARS, THEBRIDGE -> { armor(p,Material.IRON); p.getInventory().addItem(item(Material.IRON_SWORD),item(Material.WHITE_WOOL,64),item(Material.GOLDEN_APPLE,4)); }
+            case BEDWARS, THEBRIDGE -> { armor(p,Material.IRON_INGOT); p.getInventory().addItem(item(Material.IRON_SWORD),item(Material.WHITE_WOOL,64),item(Material.GOLDEN_APPLE,4)); }
         }
     }
     private int goldenCount(){return 6;}
