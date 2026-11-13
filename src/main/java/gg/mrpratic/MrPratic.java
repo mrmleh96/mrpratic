@@ -331,6 +331,9 @@ public final class MrPratic extends JavaPlugin implements Listener, CommandExecu
     private boolean isProtectedLobby(Location location) {
         return location != null && world != null && location.getWorld() != null
                 && location.getWorld().getUID().equals(world.getUID())
+                && Math.abs(location.getBlockX()) <= 26
+                && Math.abs(location.getBlockZ()) <= 26
+                && location.getBlockY() >= 90 && location.getBlockY() <= 130
                 && getConfig().getBoolean("server.protect-lobby", true)
                 && !getConfig().getBoolean("server.allow-build-in-lobby", false);
     }
