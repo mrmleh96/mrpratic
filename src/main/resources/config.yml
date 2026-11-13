@@ -1,0 +1,33 @@
+server:
+  address: "mrpratic.mcsh.gg"
+  lobby-world: "mrpratic_lobi"
+  auto-create-lobby: true
+  teleport-on-join: true
+
+theme:
+  primary: "&2"
+  secondary: "&a"
+  prefix: "&8[&aMrPratic&8] "
+
+ranks:
+  default: "Çaylak"
+  prefixes:
+    Çaylak: "&7[Çaylak]"
+    Oyuncu: "&f[Oyuncu]"
+    VIP: "&a[VIP]"
+    "VIP+": "&2[VIP+]"
+    MVP: "&b[MVP]"
+    "MVP+": "&3[MVP+]"
+    Elmas: "&b[Elmas]"
+    Zümrüt: "&a[Zümrüt]"
+    Efsane: "&6[Efsane]"
+    YouTube: "&c[YouTube]"
+    Rehber: "&e[Rehber]"
+    Moderatör: "&9[Mod]"
+    Admin: "&c[Admin]"
+    Kurucu: "&4[Kurucu]"
+
+scoreboard:
+  enabled: true
+  title: "&a&lMRPRATIC"
+  footer: "&amrpratic.mcsh.gg"
