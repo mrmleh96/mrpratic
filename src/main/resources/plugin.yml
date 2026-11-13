@@ -3,30 +3,42 @@ version: '${version}'
 main: gg.mrpratic.MrPratic
 api-version: '1.21.11'
 author: MrPratic
-description: Türkçe Practice ve PvP sunucusu altyapısı
+description: Türkçe Practice ve PvP sunucusu
 commands:
   spawn:
-    description: Lobiye ışınlanırsın.
+    description: Lobiye dön.
     aliases: [lobi]
   kit:
-    description: Kit menüsünü açar.
+    description: Kitleri göster veya uygula.
   ffa:
-    description: FFA oyun modlarını gösterir.
+    description: FFA menüsünü aç veya arenaya katıl.
   duello:
-    description: Oyuncuya düello daveti gönderir.
+    description: Düello daveti gönder veya kabul et.
     aliases: [duel]
   rank:
-    description: Rank bilgini gösterir.
-    aliases: [rutbe, rütbe]
+    description: Rank bilgisi ve yönetimi.
+    aliases: [rutbe]
   istatistik:
-    description: İstatistiklerini gösterir.
+    description: İstatistiklerini göster.
     aliases: [stats]
   arena:
-    description: Arena bilgilerini gösterir.
+    description: FFA arenalarını listele.
   mrpratic:
-    description: MrPratic yönetim komutları.
+    description: Yönetim komutları.
     aliases: [mpr]
+  parti:
+    description: Parti sistemi.
+  arkadaş:
+    description: Arkadaş sistemi.
+  liderlik:
+    description: Liderlik tablosu.
+  sıra:
+    description: Eşleştirme kuyruğu.
+  rematch:
+    description: Rövanş iste.
+  izle:
+    description: Maç izle.
 permissions:
   mrpratic.admin:
-    description: MrPratic yönetim izinleri.
+    description: MrPratic yönetim yetkisi.
     default: op
