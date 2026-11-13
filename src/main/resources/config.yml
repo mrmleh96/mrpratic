@@ -3,16 +3,27 @@ server:
   lobby-world: "mrpratic_lobi"
   auto-create-lobby: true
   teleport-on-join: true
+  protect-lobby: true
+  allow-build-in-lobby: false
+  max-party-size: 8
+  invite-timeout-seconds: 60
 
 theme:
   primary: "&2"
   secondary: "&a"
   prefix: "&8[&aMrPratic&8] "
+  accent: "&b"
+  background: "&0"
 
 ranks:
   default: "Çaylak"
   prefixes:
     Çaylak: "&7[Çaylak]"
+    Acemi: "&a[Acemi]"
+    Savaşçı: "&2[Savaşçı]"
+    Usta: "&3[Usta]"
+    Elit: "&b[Elit]"
+    Efsane: "&6[Efsane]"
     Oyuncu: "&f[Oyuncu]"
     VIP: "&a[VIP]"
     "VIP+": "&2[VIP+]"
@@ -20,14 +31,18 @@ ranks:
     "MVP+": "&3[MVP+]"
     Elmas: "&b[Elmas]"
     Zümrüt: "&a[Zümrüt]"
-    Efsane: "&6[Efsane]"
     YouTube: "&c[YouTube]"
     Rehber: "&e[Rehber]"
     Moderatör: "&9[Mod]"
     Admin: "&c[Admin]"
     Kurucu: "&4[Kurucu]"
+    Owner: "&4&l[OWNER]"
 
 scoreboard:
   enabled: true
   title: "&a&lMRPRATIC"
   footer: "&amrpratic.mcsh.gg"
+
+stats: {}
+player-ranks: {}
+friends: {}
