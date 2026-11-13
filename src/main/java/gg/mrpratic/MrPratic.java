@@ -43,6 +43,13 @@ public final class MrPratic extends JavaPlugin implements Listener, CommandExecu
     private final Map<UUID, UUID> duelOpponents = new ConcurrentHashMap<>();
     private final Map<UUID, UUID> duelInvites = new ConcurrentHashMap<>();
     private final Map<UUID, Long> inviteTimes = new ConcurrentHashMap<>();
+    private final Map<UUID, UUID> lastOpponents = new ConcurrentHashMap<>();
+    private final Map<UUID, UUID> rematchRequests = new ConcurrentHashMap<>();
+    private final Map<UUID, Set<UUID>> parties = new ConcurrentHashMap<>();
+    private final Map<UUID, UUID> partyOf = new ConcurrentHashMap<>();
+    private final Map<UUID, UUID> partyInvites = new ConcurrentHashMap<>();
+    private final Set<UUID> duelQueue = ConcurrentHashMap.newKeySet();
+    private final Map<UUID, Location> spectatorReturns = new ConcurrentHashMap<>();
     private World world;
     private Location lobbySpawn;
 
@@ -165,6 +172,9 @@ public final class MrPratic extends JavaPlugin implements Listener, CommandExecu
         ffaPlayers.remove(p.getUniqueId());
         UUID opponent=duelOpponents.remove(p.getUniqueId());
         if(opponent!=null) duelOpponents.remove(opponent);
+        duelQueue.remove(p.getUniqueId());
+        leaveParty(p, false);
+        spectatorReturns.remove(p.getUniqueId());
         p.getInventory().clear(); p.getInventory().setArmorContents(null);
     }
     private void openFfaMenu(Player p) {
@@ -175,18 +185,29 @@ public final class MrPratic extends JavaPlugin implements Listener, CommandExecu
     private void startDuel(Player a,Player b) {
         leaveModes(a); leaveModes(b);
         duelOpponents.put(a.getUniqueId(),b.getUniqueId()); duelOpponents.put(b.getUniqueId(),a.getUniqueId());
+        lastOpponents.put(a.getUniqueId(),b.getUniqueId()); lastOpponents.put(b.getUniqueId(),a.getUniqueId());
+        duelQueue.remove(a.getUniqueId()); duelQueue.remove(b.getUniqueId());
+        a.setGameMode(GameMode.SURVIVAL); b.setGameMode(GameMode.SURVIVAL);
         giveKit(a,Mode.CPVP); giveKit(b,Mode.CPVP);
         a.teleport(new Location(world,1994.5,100,0.5)); b.teleport(new Location(world,2005.5,100,0.5));
         a.sendMessage(msg("&a"+b.getName()+" ile düello başladı!")); b.sendMessage(msg("&a"+a.getName()+" ile düello başladı!"));
     }
     private void endDuel(Player loser,Player winner) {
         duelOpponents.remove(loser.getUniqueId()); duelOpponents.remove(winner.getUniqueId());
+        lastOpponents.put(loser.getUniqueId(),winner.getUniqueId()); lastOpponents.put(winner.getUniqueId(),loser.getUniqueId());
         addStat(winner,"kills",1); addStat(loser,"deaths",1);
         loser.sendMessage(msg("&cDüelloyu kaybettin.")); winner.sendMessage(msg("&aDüelloyu kazandın!"));
         Bukkit.getScheduler().runTask(this,()->{ loser.teleport(lobbySpawn); winner.teleport(lobbySpawn); loser.getInventory().clear(); winner.getInventory().clear(); });
     }
     private void addStat(Player p,String key,int amount) {
         String path="stats."+p.getUniqueId()+"."+key; getConfig().set(path,getConfig().getInt(path)+amount); saveConfig();
+    }
+    private void leaveParty(Player p,boolean notify) {
+        UUID id=p.getUniqueId();UUID leader=partyOf.remove(id);if(leader==null)return;
+        Set<UUID> members=parties.get(leader);if(members==null)return;members.remove(id);
+        if(members.isEmpty()){parties.remove(leader);return;}
+        if(leader.equals(id)){UUID next=members.iterator().next();Set<UUID> updated=ConcurrentHashMap.newKeySet();updated.addAll(members);parties.remove(leader);parties.put(next,updated);for(UUID member:updated)partyOf.put(member,next);leader=next;}
+        if(notify){Player owner=Bukkit.getPlayer(leader);if(owner!=null)owner.sendMessage(msg("&e"+p.getName()+" partiden ayrıldı."));p.sendMessage(msg("&aPartiden ayrıldın."));}
     }
     @EventHandler public void onJoin(PlayerJoinEvent e) {
         Player p=e.getPlayer(); ranks.putIfAbsent(p.getUniqueId(),"Çaylak");
@@ -197,6 +218,11 @@ public final class MrPratic extends JavaPlugin implements Listener, CommandExecu
         Player p=e.getPlayer(); UUID opponent=duelOpponents.remove(p.getUniqueId());
         if(opponent!=null){duelOpponents.remove(opponent); Player other=Bukkit.getPlayer(opponent); if(other!=null){other.sendMessage(msg("&cRakibin oyundan çıktı, düelloyu kazandın.")); other.teleport(lobbySpawn);}}
         ffaPlayers.remove(p.getUniqueId()); duelInvites.remove(p.getUniqueId()); inviteTimes.remove(p.getUniqueId());
+        duelQueue.remove(p.getUniqueId());
+        UUID party=partyOf.remove(p.getUniqueId());
+        if(party!=null){Set<UUID> members=parties.get(party);if(members!=null){members.remove(p.getUniqueId());if(members.isEmpty())parties.remove(party);}}
+        partyInvites.remove(p.getUniqueId());
+        rematchRequests.remove(p.getUniqueId());
     }
     @EventHandler public void onDeath(PlayerDeathEvent e) {
         Player p=e.getEntity(); Player killer=p.getKiller();
@@ -258,8 +284,61 @@ public final class MrPratic extends JavaPlugin implements Listener, CommandExecu
             s.sendMessage(msg("&cKullanım: /rank veya /rank ayarla <oyuncu> <rank>"));return true;
         }
         if(n.equals("arena")) {s.sendMessage(msg("&aOluşturulan FFA arenaları:"));for(Mode m:Mode.values())s.sendMessage(c("&7- &f"+m.display));return true;}
-        if(n.equals("liderlik")) {s.sendMessage(msg("&eLiderlik tablosu için henüz çevrimiçi sıralama ekranı eklenmedi."));return true;}
-        if(n.equals("parti")||n.equals("arkadaş")||n.equals("sıra")||n.equals("rematch")||n.equals("izle")) {s.sendMessage(msg("&eBu modül sonraki geliştirme paketinde eklenecek."));return true;}
+        if(n.equals("liderlik")) {
+            String stat=a.length>0&&a[0].equalsIgnoreCase("ölüm")?"deaths":"kills";
+            if(a.length>0&&!a[0].equalsIgnoreCase("ölüm")&&!a[0].equalsIgnoreCase("öldürme")){s.sendMessage(msg("&cKullanım: /liderlik [öldürme|ölüm]"));return true;}
+            if(!getConfig().isConfigurationSection("stats")){s.sendMessage(msg("&eHenüz istatistik yok."));return true;}
+            List<String> ids=new ArrayList<>(getConfig().getConfigurationSection("stats").getKeys(false));
+            ids.sort((x,y)->Integer.compare(getConfig().getInt("stats."+y+"."+stat),getConfig().getInt("stats."+x+"."+stat)));
+            s.sendMessage(msg("&a&l"+(stat.equals("kills")?"EN ÇOK ÖLDÜRME":"EN ÇOK ÖLÜM")));
+            int place=0;for(String id:ids){if(place>=10)break;int value=getConfig().getInt("stats."+id+"."+stat);if(value<=0)continue;String playerName;try{playerName=Optional.ofNullable(Bukkit.getOfflinePlayer(UUID.fromString(id)).getName()).orElse("Bilinmeyen");}catch(IllegalArgumentException ex){playerName="Bilinmeyen";}place++;s.sendMessage(c("&e"+place+". &f"+playerName+" &8» &a"+value));}
+            if(place==0)s.sendMessage(msg("&7Henüz kayıtlı sonuç yok."));return true;
+        }
+        if(n.equals("parti")) {
+            if(!(s instanceof Player p)){s.sendMessage("Oyuncu komutu.");return true;}
+            if(a.length==0){UUID leader=partyOf.getOrDefault(p.getUniqueId(),p.getUniqueId());Set<UUID> members=parties.get(leader);p.sendMessage(msg("&aParti komutları: &f/parti kur, /parti davet <oyuncu>, /parti kabul, /parti ayrıl, /parti liste"));if(members!=null){StringJoiner names=new StringJoiner(", ");for(UUID id:members){Player member=Bukkit.getPlayer(id);names.add(member==null?id.toString():member.getName());}p.sendMessage(msg("&7Partin: &f"+names));}return true;}
+            String sub=a[0].toLowerCase(Locale.ROOT);
+            if(sub.equals("kur")){if(partyOf.containsKey(p.getUniqueId())){p.sendMessage(msg("&cZaten bir partidesin."));return true;}Set<UUID> members=ConcurrentHashMap.newKeySet();members.add(p.getUniqueId());parties.put(p.getUniqueId(),members);partyOf.put(p.getUniqueId(),p.getUniqueId());p.sendMessage(msg("&aParti kuruldu."));return true;}
+            if(sub.equals("davet")&&a.length>1){Player target=Bukkit.getPlayerExact(a[1]);if(target==null||target.equals(p)){p.sendMessage(msg("&cOyuncu bulunamadı."));return true;}UUID leader=partyOf.getOrDefault(p.getUniqueId(),p.getUniqueId());Set<UUID> members=parties.get(leader);if(members==null||!leader.equals(p.getUniqueId())){p.sendMessage(msg("&cParti lideri değilsin. Önce /parti kur."));return true;}partyInvites.put(target.getUniqueId(),leader);target.sendMessage(msg("&e"+p.getName()+" seni partisine davet etti. &a/parti kabul"));p.sendMessage(msg("&aParti daveti gönderildi."));return true;}
+            if(sub.equals("kabul")){UUID leader=partyInvites.remove(p.getUniqueId());Set<UUID> members=leader==null?null:parties.get(leader);if(members==null){p.sendMessage(msg("&cBekleyen parti davetin yok."));return true;}leaveParty(p,false);members.add(p.getUniqueId());partyOf.put(p.getUniqueId(),leader);for(UUID id:members){Player member=Bukkit.getPlayer(id);if(member!=null)member.sendMessage(msg("&a"+p.getName()+" partiye katıldı."));}return true;}
+            if(sub.equals("ayrıl")||sub.equals("leave")){leaveParty(p,true);return true;}
+            if(sub.equals("liste")){UUID leader=partyOf.getOrDefault(p.getUniqueId(),p.getUniqueId());Set<UUID> members=parties.get(leader);if(members==null){p.sendMessage(msg("&cBir partide değilsin."));return true;}StringJoiner names=new StringJoiner(", ");for(UUID id:members){Player member=Bukkit.getPlayer(id);names.add(member==null?id.toString():member.getName());}p.sendMessage(msg("&aParti üyeleri: &f"+names));return true;}
+            p.sendMessage(msg("&cKullanım: /parti kur|davet <oyuncu>|kabul|ayrıl|liste"));return true;
+        }
+        if(n.equals("arkadaş")) {
+            if(!(s instanceof Player p)){s.sendMessage("Oyuncu komutu.");return true;}
+            if(a.length==0){p.sendMessage(msg("&aKullanım: /arkadaş ekle <oyuncu>, /arkadaş sil <oyuncu>, /arkadaş liste"));return true;}
+            String path="friends."+p.getUniqueId();String sub=a[0].toLowerCase(Locale.ROOT);
+            if(sub.equals("liste")){List<String> names=getConfig().getStringList(path);p.sendMessage(msg("&aArkadaşların: &f"+(names.isEmpty()?"Yok":String.join(", ",names))));return true;}
+            if(a.length<2){p.sendMessage(msg("&cOyuncu adı yazmalısın."));return true;}
+            List<String> names=new ArrayList<>(getConfig().getStringList(path));String target=a[1];
+            if(sub.equals("ekle")){if(target.equalsIgnoreCase(p.getName())){p.sendMessage(msg("&cKendini ekleyemezsin."));return true;}if(names.stream().anyMatch(x->x.equalsIgnoreCase(target))){p.sendMessage(msg("&eBu oyuncu zaten arkadaş listende."));return true;}names.add(target);getConfig().set(path,names);saveConfig();p.sendMessage(msg("&a"+target+" arkadaş listene eklendi."));return true;}
+            if(sub.equals("sil")){boolean removed=names.removeIf(x->x.equalsIgnoreCase(target));getConfig().set(path,names);saveConfig();p.sendMessage(msg(removed?"&aArkadaş silindi.":"&cBu oyuncu listende yok."));return true;}
+            p.sendMessage(msg("&cKullanım: /arkadaş ekle|sil <oyuncu> veya liste"));return true;
+        }
+        if(n.equals("sıra")) {
+            if(!(s instanceof Player p)){s.sendMessage("Oyuncu komutu.");return true;}
+            if(a.length>0&&(a[0].equalsIgnoreCase("çık")||a[0].equalsIgnoreCase("leave"))){duelQueue.remove(p.getUniqueId());p.sendMessage(msg("&eEşleştirme kuyruğundan çıktın."));return true;}
+            if(duelOpponents.containsKey(p.getUniqueId())||ffaPlayers.containsKey(p.getUniqueId())){p.sendMessage(msg("&cÖnce mevcut maçından çıkmalısın."));return true;}
+            if(!duelQueue.add(p.getUniqueId())){p.sendMessage(msg("&eZaten kuyruktasın."));return true;}
+            p.sendMessage(msg("&aCPvP eşleştirme kuyruğuna girdin. &7/ sıra çık"));
+            List<UUID> waiting=new ArrayList<>(duelQueue);waiting.remove(p.getUniqueId());
+            for(UUID id:waiting){Player other=Bukkit.getPlayer(id);if(other!=null&&other.isOnline()){duelQueue.remove(id);duelQueue.remove(p.getUniqueId());startDuel(p,other);return true;}}
+            p.sendMessage(msg("&7Rakip bekleniyor..."));return true;
+        }
+        if(n.equals("rematch")) {
+            if(!(s instanceof Player p)){s.sendMessage("Oyuncu komutu.");return true;}
+            if(a.length==0){p.sendMessage(msg("&eRövanş için: /rematch <oyuncu> veya /rematch kabul"));return true;}
+            if(a[0].equalsIgnoreCase("kabul")){UUID requester=rematchRequests.remove(p.getUniqueId());if(requester==null||!p.getUniqueId().equals(lastOpponents.get(requester))){p.sendMessage(msg("&cBekleyen rövanş isteği yok."));return true;}Player other=Bukkit.getPlayer(requester);if(other==null){p.sendMessage(msg("&cRakibin çevrimiçi değil."));return true;}startDuel(p,other);return true;}
+            Player target=Bukkit.getPlayerExact(a[0]);if(target==null||target.equals(p)||!target.getUniqueId().equals(lastOpponents.get(p.getUniqueId()))){p.sendMessage(msg("&cSon rakibin çevrimiçi değil veya bu oyuncu son rakibin değil."));return true;}rematchRequests.put(target.getUniqueId(),p.getUniqueId());target.sendMessage(msg("&e"+p.getName()+" rövanş istiyor. &a/rematch kabul"));p.sendMessage(msg("&aRövanş isteği gönderildi."));return true;
+        }
+        if(n.equals("izle")) {
+            if(!(s instanceof Player p)){s.sendMessage("Oyuncu komutu.");return true;}
+            if(a.length==0){p.sendMessage(msg("&eKullanım: /izle <oyuncu> veya /izle çık"));return true;}
+            if(a[0].equalsIgnoreCase("çık")||a[0].equalsIgnoreCase("leave")){Location back=spectatorReturns.remove(p.getUniqueId());p.setGameMode(GameMode.SURVIVAL);p.teleport(back==null?lobbySpawn:back);p.sendMessage(msg("&aİzleme modundan çıktın."));return true;}
+            Player target=Bukkit.getPlayerExact(a[0]);if(target==null||target.equals(p)||!duelOpponents.containsKey(target.getUniqueId())){p.sendMessage(msg("&cİzlenecek aktif düello oyuncusu bulunamadı."));return true;}spectatorReturns.putIfAbsent(p.getUniqueId(),p.getLocation());p.setGameMode(GameMode.SPECTATOR);p.teleport(target.getLocation());p.sendMessage(msg("&a"+target.getName()+" izleniyor. Çıkmak için /izle çık"));return true;
+        }
+
         if(n.equals("mrpratic")) {if(!s.hasPermission("mrpratic.admin")){s.sendMessage(msg("&cYetkin yok."));return true;}if(a.length>0&&a[0].equalsIgnoreCase("kaydet")){saveRanks();s.sendMessage(msg("&aVeriler kaydedildi."));}else s.sendMessage(msg("&aMrPratic aktif. &7/ffa, /duello, /kit, /istatistik"));return true;}
         return false;
     }
