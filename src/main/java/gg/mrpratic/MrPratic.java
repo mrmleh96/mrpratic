@@ -158,10 +158,10 @@ public final class MrPratic extends JavaPlugin implements Listener, CommandExecu
     private ItemStack item(Material m){return new ItemStack(m);}
     private ItemStack item(Material m,int amount){return new ItemStack(m,amount);}
     private void armor(Player p,Material m) {
-        Material helmet=m==Material.NETHERITE?Material.NETHERITE_HELMET:m==Material.DIAMOND?Material.DIAMOND_HELMET:Material.IRON_HELMET;
-        Material chest=m==Material.NETHERITE?Material.NETHERITE_CHESTPLATE:m==Material.DIAMOND?Material.DIAMOND_CHESTPLATE:Material.IRON_CHESTPLATE;
-        Material legs=m==Material.NETHERITE?Material.NETHERITE_LEGGINGS:m==Material.DIAMOND?Material.DIAMOND_LEGGINGS:Material.IRON_LEGGINGS;
-        Material boots=m==Material.NETHERITE?Material.NETHERITE_BOOTS:m==Material.DIAMOND?Material.DIAMOND_BOOTS:Material.IRON_BOOTS;
+        Material helmet=m==Material.NETHERITE_INGOT?Material.NETHERITE_HELMET:m==Material.DIAMOND?Material.DIAMOND_HELMET:Material.IRON_HELMET;
+        Material chest=m==Material.NETHERITE_INGOT?Material.NETHERITE_CHESTPLATE:m==Material.DIAMOND?Material.DIAMOND_CHESTPLATE:Material.IRON_CHESTPLATE;
+        Material legs=m==Material.NETHERITE_INGOT?Material.NETHERITE_LEGGINGS:m==Material.DIAMOND?Material.DIAMOND_LEGGINGS:Material.IRON_LEGGINGS;
+        Material boots=m==Material.NETHERITE_INGOT?Material.NETHERITE_BOOTS:m==Material.DIAMOND?Material.DIAMOND_BOOTS:Material.IRON_BOOTS;
         p.getInventory().setArmorContents(new ItemStack[]{item(boots),item(legs),item(chest),item(helmet)});
     }
     private void joinFfa(Player p,Mode mode) {
