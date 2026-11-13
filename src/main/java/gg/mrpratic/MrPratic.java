@@ -94,14 +94,91 @@ public final class MrPratic extends JavaPlugin implements Listener, CommandExecu
         saveConfig();
     }
     private void createLobby() {
-        int y = 100; lobbySpawn = new Location(world, 0.5, y, 0.5);
-        for (int x=-24;x<=24;x++) for(int z=-24;z<=24;z++) {
-            Material floor = Math.abs(x)==24 || Math.abs(z)==24 ? Material.EMERALD_BLOCK : Material.POLISHED_DEEPSLATE;
-            world.getBlockAt(x,y-1,z).setType(floor,false);
-            world.getBlockAt(x,y,z).setType(Material.AIR,false);
-            world.getBlockAt(x,y+1,z).setType(Material.AIR,false);
+        int y = 100;
+        lobbySpawn = new Location(world, 0.5, y + 1, 0.5);
+
+        // Geniş, desenli deepslate meydan ve zümrüt çerçeve
+        for (int x = -24; x <= 24; x++) {
+            for (int z = -24; z <= 24; z++) {
+                world.getBlockAt(x, y - 2, z).setType(Material.BLACKSTONE, false);
+                Material floor;
+                if (Math.abs(x) == 24 || Math.abs(z) == 24) floor = Material.EMERALD_BLOCK;
+                else if (Math.abs(x) == 23 || Math.abs(z) == 23) floor = Material.POLISHED_BLACKSTONE_BRICKS;
+                else if ((x + z) % 6 == 0) floor = Material.DEEPSLATE_TILES;
+                else floor = Material.POLISHED_DEEPSLATE;
+                world.getBlockAt(x, y - 1, z).setType(floor, false);
+                for (int h = 0; h <= 12; h++) world.getBlockAt(x, y + h, z).setType(Material.AIR, false);
+            }
         }
-        for(int x=-3;x<=3;x++) for(int z=-3;z<=3;z++) world.getBlockAt(x,y-1,z).setType(Material.EMERALD_BLOCK,false);
+
+        // Dört yönde merkeze bağlanan geniş yollar
+        for (int i = -22; i <= 22; i++) {
+            for (int w = -2; w <= 2; w++) {
+                world.getBlockAt(w, y - 1, i).setType(Math.abs(w) == 2 ? Material.EMERALD_BLOCK : Material.DEEPSLATE_BRICKS, false);
+                world.getBlockAt(i, y - 1, w).setType(Math.abs(w) == 2 ? Material.EMERALD_BLOCK : Material.DEEPSLATE_BRICKS, false);
+            }
+        }
+
+        // Merkez spawn platformu: katmanlı, simetrik ve geniş
+        for (int x = -8; x <= 8; x++) {
+            for (int z = -8; z <= 8; z++) {
+                int edge = Math.max(Math.abs(x), Math.abs(z));
+                Material mat = edge == 8 ? Material.EMERALD_BLOCK
+                        : edge == 7 ? Material.POLISHED_BLACKSTONE_BRICKS
+                        : edge == 6 ? Material.SMOOTH_QUARTZ
+                        : Material.POLISHED_DEEPSLATE;
+                world.getBlockAt(x, y, z).setType(mat, false);
+            }
+        }
+        for (int x = -4; x <= 4; x++) {
+            for (int z = -4; z <= 4; z++) {
+                world.getBlockAt(x, y, z).setType((Math.abs(x) == 4 || Math.abs(z) == 4)
+                        ? Material.EMERALD_BLOCK : Material.DEEPSLATE_TILES, false);
+            }
+        }
+        for (int x = -2; x <= 2; x++) for (int z = -2; z <= 2; z++)
+            world.getBlockAt(x, y, z).setType(Material.EMERALD_BLOCK, false);
+
+        // Dört köşede yüksek dekoratif sütunlar ve ışıklandırma
+        for (int sx : new int[]{-10, 10}) {
+            for (int sz : new int[]{-10, 10}) {
+                for (int h = 0; h <= 7; h++) {
+                    world.getBlockAt(sx, y + h, sz).setType(h == 0 ? Material.POLISHED_BLACKSTONE_BRICKS
+                            : h == 7 ? Material.EMERALD_BLOCK : Material.QUARTZ_PILLAR, false);
+                }
+                world.getBlockAt(sx + 1, y, sz).setType(Material.EMERALD_BLOCK, false);
+                world.getBlockAt(sx - 1, y, sz).setType(Material.EMERALD_BLOCK, false);
+                world.getBlockAt(sx, y, sz + 1).setType(Material.EMERALD_BLOCK, false);
+                world.getBlockAt(sx, y, sz - 1).setType(Material.EMERALD_BLOCK, false);
+                world.getBlockAt(sx, y + 8, sz).setType(Material.SEA_LANTERN, false);
+                world.getBlockAt(sx, y + 9, sz).setType(Material.END_ROD, false);
+            }
+        }
+
+        // Dış meydan köşelerinde kısa fener direkleri
+        for (int sx : new int[]{-20, 20}) {
+            for (int sz : new int[]{-20, 20}) {
+                for (int h = 0; h <= 3; h++)
+                    world.getBlockAt(sx, y + h, sz).setType(h == 0 ? Material.POLISHED_BLACKSTONE_BRICKS : Material.QUARTZ_PILLAR, false);
+                world.getBlockAt(sx, y + 4, sz).setType(Material.SEA_LANTERN, false);
+                world.getBlockAt(sx, y + 5, sz).setType(Material.LANTERN, false);
+            }
+        }
+
+        // Dört yönde giriş kemerleri
+        for (int side : new int[]{-1, 1}) {
+            for (int h = 0; h <= 5; h++) {
+                world.getBlockAt(side * 20, y + h, -3).setType(h == 5 ? Material.EMERALD_BLOCK : Material.QUARTZ_PILLAR, false);
+                world.getBlockAt(side * 20, y + h, 3).setType(h == 5 ? Material.EMERALD_BLOCK : Material.QUARTZ_PILLAR, false);
+                world.getBlockAt(-3, y + h, side * 20).setType(h == 5 ? Material.EMERALD_BLOCK : Material.QUARTZ_PILLAR, false);
+                world.getBlockAt(3, y + h, side * 20).setType(h == 5 ? Material.EMERALD_BLOCK : Material.QUARTZ_PILLAR, false);
+            }
+            for (int span = -3; span <= 3; span++) {
+                world.getBlockAt(side * 20, y + 5, span).setType(Material.EMERALD_BLOCK, false);
+                world.getBlockAt(span, y + 5, side * 20).setType(Material.EMERALD_BLOCK, false);
+            }
+        }
+
         world.setSpawnLocation(lobbySpawn);
     }
     private void createArenas() {
