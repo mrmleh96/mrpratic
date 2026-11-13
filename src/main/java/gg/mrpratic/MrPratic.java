@@ -219,8 +219,7 @@ public final class MrPratic extends JavaPlugin implements Listener, CommandExecu
         if(opponent!=null){duelOpponents.remove(opponent); Player other=Bukkit.getPlayer(opponent); if(other!=null){other.sendMessage(msg("&cRakibin oyundan çıktı, düelloyu kazandın.")); other.teleport(lobbySpawn);}}
         ffaPlayers.remove(p.getUniqueId()); duelInvites.remove(p.getUniqueId()); inviteTimes.remove(p.getUniqueId());
         duelQueue.remove(p.getUniqueId());
-        UUID party=partyOf.remove(p.getUniqueId());
-        if(party!=null){Set<UUID> members=parties.get(party);if(members!=null){members.remove(p.getUniqueId());if(members.isEmpty())parties.remove(party);}}
+        leaveParty(p,false);
         partyInvites.remove(p.getUniqueId());
         rematchRequests.remove(p.getUniqueId());
     }
@@ -256,7 +255,7 @@ public final class MrPratic extends JavaPlugin implements Listener, CommandExecu
 
     @Override public boolean onCommand(CommandSender s,Command cmd,String label,String[] a) {
         String n=cmd.getName().toLowerCase(Locale.ROOT);
-        if(n.equals("spawn")) { if(s instanceof Player p){leaveModes(p);p.teleport(lobbySpawn);p.sendMessage(msg("&aLobiye döndün."));} else s.sendMessage("Oyuncu komutu."); return true; }
+        if(n.equals("spawn")) { if(s instanceof Player p){leaveModes(p);spectatorReturns.remove(p.getUniqueId());p.setGameMode(GameMode.SURVIVAL);p.teleport(lobbySpawn);p.sendMessage(msg("&aLobiye döndün."));} else s.sendMessage("Oyuncu komutu."); return true; }
         if(n.equals("ffa")) {
             if(!(s instanceof Player p)){s.sendMessage("Oyuncu komutu.");return true;}
             if(a.length==0){openFfaMenu(p);return true;}
