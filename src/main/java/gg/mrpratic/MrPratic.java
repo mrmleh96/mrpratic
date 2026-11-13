@@ -328,6 +328,53 @@ public final class MrPratic extends JavaPlugin implements Listener, CommandExecu
             String name=ChatColor.stripColor(it.getItemMeta().getDisplayName()); if(name!=null){Mode m=Mode.parse(name);if(m!=null){p.closeInventory();joinFfa(p,m);}}
         }
     }
+    private boolean isProtectedLobby(Location location) {
+        return location != null && world != null && location.getWorld() != null
+                && location.getWorld().getUID().equals(world.getUID())
+                && getConfig().getBoolean("server.protect-lobby", true)
+                && !getConfig().getBoolean("server.allow-build-in-lobby", false);
+    }
+
+    @EventHandler public void onLobbyBuild(BlockPlaceEvent e) {
+        if (isProtectedLobby(e.getBlock().getLocation()) && !e.getPlayer().hasPermission("mrpratic.admin")) {
+            e.setCancelled(true);
+            e.getPlayer().sendMessage(msg("&cLobide blok koyamazsın."));
+        }
+    }
+
+    @EventHandler public void onLobbyBreak(org.bukkit.event.block.BlockBreakEvent e) {
+        if (isProtectedLobby(e.getBlock().getLocation()) && !e.getPlayer().hasPermission("mrpratic.admin")) {
+            e.setCancelled(true);
+            e.getPlayer().sendMessage(msg("&cLobide blok kıramazsın."));
+        }
+    }
+
+    @EventHandler public void onLobbyInteract(PlayerInteractEvent e) {
+        if (isProtectedLobby(e.getPlayer().getLocation()) && !e.getPlayer().hasPermission("mrpratic.admin")
+                && e.getClickedBlock() != null && isProtectedLobby(e.getClickedBlock().getLocation())) {
+            e.setCancelled(true);
+        }
+    }
+
+    @EventHandler public void onLobbyDrop(PlayerDropItemEvent e) {
+        if (isProtectedLobby(e.getPlayer().getLocation())) e.setCancelled(true);
+    }
+
+    @EventHandler public void onLobbyPickup(org.bukkit.event.entity.EntityPickupItemEvent e) {
+        if (e.getEntity() instanceof Player p && isProtectedLobby(p.getLocation())) e.setCancelled(true);
+    }
+
+    @EventHandler public void onLobbyDamage(org.bukkit.event.entity.EntityDamageEvent e) {
+        if (e.getEntity() instanceof Player p && isProtectedLobby(p.getLocation())) e.setCancelled(true);
+    }
+
+    @EventHandler public void onLobbyFood(org.bukkit.event.entity.FoodLevelChangeEvent e) {
+        if (e.getEntity() instanceof Player p && isProtectedLobby(p.getLocation())) {
+            e.setCancelled(true);
+            p.setFoodLevel(20);
+        }
+    }
+
     @EventHandler public void onChat(AsyncPlayerChatEvent e) { e.setFormat(rankPrefix(e.getPlayer())+" &f"+e.getPlayer().getName()+" &8» &7%2$s"); e.setFormat(c(e.getFormat())); }
 
     @Override public boolean onCommand(CommandSender s,Command cmd,String label,String[] a) {
