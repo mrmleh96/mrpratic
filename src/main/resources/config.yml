@@ -1,6 +1,6 @@
 server:
   address: "mrpratic.mcsh.gg"
-  lobby-world: "mrpratic_lobi"
+  lobby-world: "mrpratic_spawn"
   auto-create-lobby: true
   teleport-on-join: true
   protect-lobby: true
