@@ -56,7 +56,8 @@ public final class MrPratic extends JavaPlugin implements Listener, CommandExecu
 
     @Override public void onEnable() {
         saveDefaultConfig();
-        world = Bukkit.getWorld(getConfig().getString("server.lobby-world", "mrpratic_lobi"));
+        WorldBootstrap.load(this);
+        world = Bukkit.getWorld(getConfig().getString("server.lobby-world", "mrpratic_spawn"));
         if (world == null) world = new WorldCreator(getConfig().getString("server.lobby-world", "mrpratic_lobi")).createWorld();
         if (world == null) { getLogger().severe("Lobi dünyası oluşturulamadı!"); getServer().getPluginManager().disablePlugin(this); return; }
         world.setGameRule(GameRule.DO_MOB_SPAWNING, false);
