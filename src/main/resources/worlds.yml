@@ -1,0 +1,23 @@
+# MrPratic dünya ayarları
+# Var olan dünya klasörleri silinmez, sıfırlanmaz veya üzerine yazılmaz.
+worlds:
+  spawn:
+    name: mrpratic_spawn
+    mob-spawning: false
+    daylight-cycle: false
+    weather-cycle: false
+  ffa:
+    name: mrpratic_ffa
+    mob-spawning: false
+    daylight-cycle: false
+    weather-cycle: false
+  duels:
+    name: mrpratic_duels
+    mob-spawning: false
+    daylight-cycle: false
+    weather-cycle: false
+  practice:
+    name: mrpratic_practice
+    mob-spawning: false
+    daylight-cycle: false
+    weather-cycle: false
