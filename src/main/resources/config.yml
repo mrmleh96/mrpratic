@@ -36,6 +36,7 @@ ranks:
     Moderatör: "&9[Mod]"
     Admin: "&c[Admin]"
     Kurucu: "&4[Kurucu]"
+    "Baş Kurucu": "&8[&a&l▰&2&lBAŞ KURUCU&a&l▰&8]"
     Owner: "&4&l[OWNER]"
 
 scoreboard:

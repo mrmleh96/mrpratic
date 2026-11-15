@@ -211,7 +211,7 @@ public final class MrPratic extends JavaPlugin implements Listener, CommandExecu
         Mode m=ffaPlayers.get(p.getUniqueId());
         o.getScore(c("&8&m------------------")).setScore(6);
         o.getScore(c("&7Oyuncu: &f"+p.getName())).setScore(5);
-        o.getScore(c("&7Rank: "+rank(p))).setScore(4);
+        o.getScore(c("&7Rank: ")+rankPrefix(p)).setScore(4);
         o.getScore(c("&7Mod: &a"+(m==null?(duelOpponents.containsKey(p.getUniqueId())?"1v1":"Lobi"):m.display))).setScore(3);
         o.getScore(c("&7Online: &a"+Bukkit.getOnlinePlayers().size())).setScore(2);
         o.getScore(c("&amrpratic.mcsh.gg")).setScore(1);
@@ -408,7 +408,7 @@ public final class MrPratic extends JavaPlugin implements Listener, CommandExecu
         if(n.equals("istatistik")) { if(!(s instanceof Player p))return true;String id=p.getUniqueId().toString();s.sendMessage(msg("&aİstatistiklerin: &fÖldürme "+getConfig().getInt("stats."+id+".kills")+" &8| &cÖlüm "+getConfig().getInt("stats."+id+".deaths")));return true; }
         if(n.equals("rank")) {
             if(a.length==0){if(s instanceof Player p)s.sendMessage(msg("&7Rankin: ")+rankPrefix(p));return true;}
-            if(a.length>=3&&s.hasPermission("mrpratic.admin")&&a[0].equalsIgnoreCase("ayarla")){Player t=Bukkit.getPlayerExact(a[1]);if(t==null){s.sendMessage(msg("&cOyuncu çevrimiçi değil."));return true;}ranks.put(t.getUniqueId(),a[2]);saveRanks();t.sendMessage(msg("&aRankin güncellendi: "+a[2]));return true;}
+            if(a.length>=3&&s.hasPermission("mrpratic.admin")&&a[0].equalsIgnoreCase("ayarla")){Player t=Bukkit.getPlayerExact(a[1]);if(t==null){s.sendMessage(msg("&cOyuncu çevrimiçi değil."));return true;}String newRank=String.join(" ",Arrays.copyOfRange(a,2,a.length)).replace('_',' ');if(!getConfig().contains("ranks.prefixes."+newRank)){s.sendMessage(msg("&cBilinmeyen rank. &7Geçerli rankları config.yml içindeki ranks.prefixes bölümünden kontrol et."));return true;}ranks.put(t.getUniqueId(),newRank);saveRanks();updateUi(t);t.sendMessage(msg("&aRankin güncellendi: ")+rankPrefix(t));return true;}
             s.sendMessage(msg("&cKullanım: /rank veya /rank ayarla <oyuncu> <rank>"));return true;
         }
         if(n.equals("arena")) {s.sendMessage(msg("&aOluşturulan FFA arenaları:"));for(Mode m:Mode.values())s.sendMessage(c("&7- &f"+m.display));return true;}
