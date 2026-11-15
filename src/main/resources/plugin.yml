@@ -4,6 +4,7 @@ main: gg.mrpratic.MrPratic
 api-version: '1.21.11'
 author: MrPratic
 description: Türkçe Practice ve PvP sunucusu
+softdepend: [DecentHolograms]
 commands:
   spawn:
     description: Lobiye dön.
